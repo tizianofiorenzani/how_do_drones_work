@@ -279,10 +279,10 @@ while True:
         print ("Swiitch mode to MISSION")
         
     elif mode == 'MISSION':
-        #-- Here we just monitor the mission status. Once the mission is completed we go back
-        #-- vehicle.commands.cout is the total number of waypoints
-        #-- vehicle.commands.next is the waypoint the vehicle is going to
-        #-- once next == cout, we just go home
+        #-- We command the velocity in order to maintain the vehicle on track
+        #- vx = constant
+        #- vy = proportional to off track error
+        #- heading = along the path tangent
         
         my_location = vehicle.location.global_relative_frame
         bearing     = bearing_to_current_waypoint(vehicle)
@@ -305,12 +305,14 @@ while True:
 
 
         if time.time() > time0 + time_flight: 
-            ChangeMode(vehicle, 'RTL')            
+            ChangeMode(vehicle, 'RTL')    
+            clear_mission(vehicle)        
             mode = 'BACK'
+            print (">> time to head Home: switch to BACK")
             
     elif mode == "BACK":
         if vehicle.location.global_relative_frame.alt < 1:
-            print ("Switch to GROUND mode, waiting for new missions")
+            print (">> Switch to GROUND mode, waiting for new missions")
             mode = 'GROUND'
     
     
