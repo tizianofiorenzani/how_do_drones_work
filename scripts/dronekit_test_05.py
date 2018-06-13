@@ -18,6 +18,14 @@ import time
 import math
 from dronekit import connect, VehicleMode, LocationGlobalRelative, Command, LocationGlobal
 from pymavlink import mavutil
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--connect', default = '')
+args = parser.parse_args()
+
+
+connection_string = args.connect
 
 #--------------------------------------------------
 #-------------- FUNCTIONS  
@@ -242,7 +250,7 @@ mode      = 'GROUND'
 #--------------------------------------------------    
 #-- Connect to the vehicle
 print('Connecting...')
-vehicle = connect('udp:127.0.0.1:14551')
+vehicle = connect(connection_string)
 #vehicle = connect('tcp:127.0.0.1:5762', wait_ready=True)
 
 
