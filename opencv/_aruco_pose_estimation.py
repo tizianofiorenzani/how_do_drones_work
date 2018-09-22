@@ -1,6 +1,8 @@
 """
 This demo calculates multiple things for different scenarios.
 
+REMEMBER: IF RUNNING ON A RASPBERRY PI, BE SURE  sudo modprobe bcm2835-v4l2
+
 Here are the defined reference frames:
 
 TAG:
@@ -43,6 +45,7 @@ import sys, time, math
 id_to_find  = 72
 marker_size  = 10 #- [cm]
 
+SHOW_FRAME  = False
 
 #------------------------------------------------------------------------------
 #------- ROTATIONS https://www.learnopencv.com/rotation-matrix-to-euler-angles/
@@ -77,13 +80,23 @@ def rotationMatrixToEulerAngles(R):
 
     return np.array([x, y, z])
 
-
+def update_fps_read():
+    global t_read, fps_read
+    t           = time.time()
+    fps_read    = 1.0/(t - t_read)
+    t_read      = t
+    
+def update_fps_detect():
+    global t_detect, fps_detect
+    t           = time.time()
+    fps_detect  = 1.0/(t - t_detect)
+    t_detect      = t    
 
 
 #--- Get the camera calibration path
 calib_path  = ""
-camera_matrix   = np.loadtxt(calib_path+'cameraMatrix_webcam.txt', delimiter=',')
-camera_distortion   = np.loadtxt(calib_path+'cameraDistortion_webcam.txt', delimiter=',')
+camera_matrix   = np.loadtxt(calib_path+'cameraMatrix.txt', delimiter=',')
+camera_distortion   = np.loadtxt(calib_path+'cameraDistortion.txt', delimiter=',')
 
 #--- 180 deg rotation matrix around the x axis
 R_flip  = np.zeros((3,3), dtype=np.float32)
@@ -105,11 +118,19 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 #-- Font for the text in the image
 font = cv2.FONT_HERSHEY_PLAIN
 
-while True:
+t_read      = time.time()
+t_detect    = t_read
+fps_read    = 0.0
+fps_detect  = 0.0
 
+
+while True:
+    
     #-- Read the camera frame
     ret, frame = cap.read()
 
+    update_fps_read()
+    
     #-- Convert in gray scale
     gray    = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) #-- remember, OpenCV stores color images in Blue, Green, Red
 
@@ -119,6 +140,7 @@ while True:
     
     if ids != None and ids[0] == id_to_find:
         
+        update_fps_detect()
         #-- ret = [rvec, tvec, ?]
         #-- array of rotation and position of each marker in camera frame
         #-- rvec = [[rvec_1], [rvec_2], ...]    attitude of the marker respect to camera frame
@@ -132,10 +154,6 @@ while True:
         aruco.drawDetectedMarkers(frame, corners)
         aruco.drawAxis(frame, camera_matrix, camera_distortion, rvec, tvec, 10)
 
-        #-- Print the tag position in camera frame
-        str_position = "MARKER Position x=%4.0f  y=%4.0f  z=%4.0f"%(tvec[0], tvec[1], tvec[2])
-        cv2.putText(frame, str_position, (0, 100), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
         #-- Obtain the rotation matrix tag->camera
         R_ct    = np.matrix(cv2.Rodrigues(rvec)[0])
         R_tc    = R_ct.T
@@ -143,38 +161,50 @@ while True:
         #-- Get the attitude in terms of euler 321 (Needs to be flipped first)
         roll_marker, pitch_marker, yaw_marker = rotationMatrixToEulerAngles(R_flip*R_tc)
 
-        #-- Print the marker's attitude respect to camera frame
-        str_attitude = "MARKER Attitude r=%4.0f  p=%4.0f  y=%4.0f"%(math.degrees(roll_marker),math.degrees(pitch_marker),
-                            math.degrees(yaw_marker))
-        cv2.putText(frame, str_attitude, (0, 150), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
-
         #-- Now get Position and attitude f the camera respect to the marker
         pos_camera = -R_tc*np.matrix(tvec).T
+        
+        # print "Camera X = %.1f  Y = %.1f  Z = %.1f  - fps = %.0f"%(pos_camera[0], pos_camera[1], pos_camera[2],fps_detect)
+        print "Marker X = %.1f  Y = %.1f  Z = %.1f  - fps = %.0f"%(tvec[0], tvec[1], tvec[2],fps_detect)
 
-        str_position = "CAMERA Position x=%4.0f  y=%4.0f  z=%4.0f"%(pos_camera[0], pos_camera[1], pos_camera[2])
-        cv2.putText(frame, str_position, (0, 200), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        if SHOW_FRAME:
 
-        #-- Get the attitude of the camera respect to the frame
-        roll_camera, pitch_camera, yaw_camera = rotationMatrixToEulerAngles(R_flip*R_tc)
-        str_attitude = "CAMERA Attitude r=%4.0f  p=%4.0f  y=%4.0f"%(math.degrees(roll_camera),math.degrees(pitch_camera),
-                            math.degrees(yaw_camera))
-        cv2.putText(frame, str_attitude, (0, 250), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            #-- Print the tag position in camera frame
+            str_position = "MARKER Position x=%4.0f  y=%4.0f  z=%4.0f"%(tvec[0], tvec[1], tvec[2])
+            cv2.putText(frame, str_position, (0, 100), font, 1, (0, 255, 0), 2, cv2.LINE_AA)        
+            
+            #-- Print the marker's attitude respect to camera frame
+            str_attitude = "MARKER Attitude r=%4.0f  p=%4.0f  y=%4.0f"%(math.degrees(roll_marker),math.degrees(pitch_marker),
+                                math.degrees(yaw_marker))
+            cv2.putText(frame, str_attitude, (0, 150), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
 
 
+
+            str_position = "CAMERA Position x=%4.0f  y=%4.0f  z=%4.0f"%(pos_camera[0], pos_camera[1], pos_camera[2])
+            cv2.putText(frame, str_position, (0, 200), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+            #-- Get the attitude of the camera respect to the frame
+            roll_camera, pitch_camera, yaw_camera = rotationMatrixToEulerAngles(R_flip*R_tc)
+            str_attitude = "CAMERA Attitude r=%4.0f  p=%4.0f  y=%4.0f"%(math.degrees(roll_camera),math.degrees(pitch_camera),
+                                math.degrees(yaw_camera))
+            cv2.putText(frame, str_attitude, (0, 250), font, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+
+    else:
+        print "Nothing detected - fps = %.0f"%fps_read
     
 
+    if SHOW_FRAME:
+        #--- Display the frame
+        cv2.imshow('frame', frame)
 
-    #--- Display the frame
-    cv2.imshow('frame', frame)
-
-    #--- use 'q' to quit
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('q'):
-        cap.release()
-        cv2.destroyAllWindows()
-        break
+        #--- use 'q' to quit
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            break
 
 
 
