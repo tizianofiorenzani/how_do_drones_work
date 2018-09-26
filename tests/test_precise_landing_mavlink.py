@@ -35,7 +35,7 @@ args = parser.parse_args()
 #--------------------------------------------------     
 # Define function to send landing_target mavlink message for mavlink based precision landing
 # http://mavlink.org/messages/common#LANDING_TARGET
-def send_land_message(x_rad=0, y_rad=0, dist_m=0, x_m=0,y_m=0,z_m=0, time_usec=0, target_num=0):
+def send_land_message_v2(x_rad=0, y_rad=0, dist_m=0, x_m=0,y_m=0,z_m=0, time_usec=0, target_num=0):
     msg = vehicle.message_factory.landing_target_encode(
         time_usec,          # time target data was processed, as close to sensor capture as possible
         target_num,          # target num, not used
@@ -55,6 +55,21 @@ def send_land_message(x_rad=0, y_rad=0, dist_m=0, x_m=0,y_m=0,z_m=0, time_usec=0
     print msg
     vehicle.send_mavlink(msg)
     vehicle.flush()
+    
+def send_land_message_v1(x_rad=0, y_rad=0, dist_m=0, time_usec=0, target_num=0):
+    msg = vehicle.message_factory.landing_target_encode(
+        time_usec,          # time target data was processed, as close to sensor capture as possible
+        target_num,          # target num, not used
+        mavutil.mavlink.MAV_FRAME_BODY_NED, # frame, not used
+        x_rad,          # X-axis angular offset, in radians
+        y_rad,          # Y-axis angular offset, in radians
+        dist_m,          # distance, in meters
+        0,          # Target x-axis size, in radians
+        0,          # Target y-axis size, in radians
+    )
+    print msg
+    vehicle.send_mavlink(msg)
+    vehicle.flush()    
         
 # Define function to send distance_message mavlink message for mavlink based rangefinder, must be >10hz
 # http://mavlink.org/messages/common#DISTANCE_SENSOR
@@ -110,7 +125,7 @@ vehicle.parameters['LAND_REPOSITION']   = 0 # !!!!!! ONLY FOR SITL IF NO RC IS C
 #--- Define Tag
 id_to_find      = 72
 marker_size     = 4 #- [cm]
-freq_send       = 5 #- Hz
+freq_send       = 15 #- Hz
 
 
 #--- Get the camera calibration path
@@ -124,15 +139,23 @@ aruco_tracker       = ArucoSingleTracker(id_to_find=72, marker_size=4, show_vide
                 
                 
 time_0 = time.time()
+
+#--- Check mavlink standard
+mavlink20 = 'MAVLINK20' in os.environ:
+
 while True:                
 
     marker_found, x_cm, y_cm, z_cm = aruco_tracker.track(loop=False)
-    if marker_found:
-        x_cm, y_cm          = camera_to_uav(x_cm, y_cm*0.0)
+    if True:#marker_found:
+        x_cm, y_cm          = 0, 50#camera_to_uav(x_cm, y_cm)
+        z_cm                = vehicle.location.global_relative_frame.alt*100.0
         angle_x, angle_y    = marker_position_to_angle(x_cm, y_cm, z_cm)
         
         if time.time() >= time_0 + 1.0/freq_send:
             time_0 = time.time()
             print "Marker found x = %5.0f cm  y = %5.0f cm -> angle_x = %5f  angle_y = %5f"%(x_cm, y_cm, angle_x, angle_y)
             # send_land_message(x_m=x_cm*0.01, y_m=y_cm*0.01, z_m=z_cm*0.01)
-            send_land_message(x_rad=angle_x, y_rad=angle_y, dist_m=z_cm*0.01)
+            if mavlink20:
+                send_land_message_v2(x_rad=angle_x, y_rad=angle_y, dist_m=z_cm*0.01, time_usec=time.time()*1e6)
+            else:
+                send_land_message_v1(x_rad=angle_x, y_rad=angle_y, dist_m=z_cm*0.01, time_usec=time.time()*1e6)
