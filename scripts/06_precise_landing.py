@@ -10,6 +10,10 @@ git pull
 sudo python setup.py build
 sudo python setup.py install
 
+Be sure the RASPI CAMERA driver is correctly acivated -> type the following
+modprobe bcm2835-v4l2 
+
+
 """
 from os import sys, path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -96,12 +100,12 @@ deg_2_rad   = 1.0/rad_2_deg
 #--------------------------------------------------    
 #--- Define Tag
 id_to_find      = 72
-marker_size     = 4 #- [cm]
-freq_send       = 2 #- Hz
+marker_size     = 10 #- [cm]
+freq_send       = 1 #- Hz
 
-land_alt_cm         = 100.0
+land_alt_cm         = 50.0
 angle_descend       = 20*deg_2_rad
-land_speed_cms      = 20.0
+land_speed_cms      = 30.0
 
 
 
@@ -111,7 +115,7 @@ cwd                 = path.dirname(path.abspath(__file__))
 calib_path          = cwd+"/../opencv/"
 camera_matrix       = np.loadtxt(calib_path+'cameraMatrix_raspi.txt', delimiter=',')
 camera_distortion   = np.loadtxt(calib_path+'cameraDistortion_raspi.txt', delimiter=',')                                      
-aruco_tracker       = ArucoSingleTracker(id_to_find=72, marker_size=4, show_video=False, 
+aruco_tracker       = ArucoSingleTracker(id_to_find=72, marker_size=marker_size, show_video=False, 
                 camera_matrix=camera_matrix, camera_distortion=camera_distortion)
                 
                 
@@ -126,6 +130,7 @@ while True:
         
         #-- If high altitude, use baro rather than visual
         if uav_location.alt >= 5.0:
+            print 
             z_cm = uav_location.alt*100.0
             
         angle_x, angle_y    = marker_position_to_angle(x_cm, y_cm, z_cm)
@@ -133,10 +138,13 @@ while True:
         
         if time.time() >= time_0 + 1.0/freq_send:
             time_0 = time.time()
+            # print ""
+            print " "
+            print "Altitude = %.0fcm"%z_cm
             print "Marker found x = %5.0f cm  y = %5.0f cm -> angle_x = %5f  angle_y = %5f"%(x_cm, y_cm, angle_x*rad_2_deg, angle_y*rad_2_deg)
             
             north, east             = uav_to_ne(x_cm, y_cm, vehicle.attitude.yaw)
-            print "Marker N = %5.0f cm   E = %5.0f cm"%(north, east)
+            print "Marker N = %5.0f cm   E = %5.0f cm   Yaw = %.0f deg"%(north, east, vehicle.attitude.yaw*rad_2_deg)
             
             marker_lat, marker_lon  = get_location_metres(uav_location, north*0.01, east*0.01)  
             #-- If angle is good, descend
@@ -152,7 +160,7 @@ while True:
             
         #--- COmmand to land
         if z_cm <= land_alt_cm:
-            if vehicle.mode != "LAND":
-                print ("COMMANDING TO LAND")
+            if vehicle.mode == "GUIDED":
+                print (" -->>COMMANDING TO LAND<<")
                 vehicle.mode = "LAND"
             

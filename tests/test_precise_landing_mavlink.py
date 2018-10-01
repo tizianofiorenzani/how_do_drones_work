@@ -54,7 +54,7 @@ def send_land_message_v2(x_rad=0, y_rad=0, dist_m=0, x_m=0,y_m=0,z_m=0, time_use
     )
     print msg
     vehicle.send_mavlink(msg)
-    vehicle.flush()
+
     
 def send_land_message_v1(x_rad=0, y_rad=0, dist_m=0, time_usec=0, target_num=0):
     msg = vehicle.message_factory.landing_target_encode(
@@ -69,7 +69,7 @@ def send_land_message_v1(x_rad=0, y_rad=0, dist_m=0, time_usec=0, target_num=0):
     )
     print msg
     vehicle.send_mavlink(msg)
-    vehicle.flush()    
+  
         
 # Define function to send distance_message mavlink message for mavlink based rangefinder, must be >10hz
 # http://mavlink.org/messages/common#DISTANCE_SENSOR
@@ -147,7 +147,7 @@ while True:
 
     marker_found, x_cm, y_cm, z_cm = aruco_tracker.track(loop=False)
     if True:#marker_found:
-        x_cm, y_cm          = 0, 50#camera_to_uav(x_cm, y_cm)
+        x_cm, y_cm          = camera_to_uav(x_cm, y_cm)
         z_cm                = vehicle.location.global_relative_frame.alt*100.0
         angle_x, angle_y    = marker_position_to_angle(x_cm, y_cm, z_cm)
         
