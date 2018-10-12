@@ -226,7 +226,7 @@ def saturate(value, minimum, maximum):
 def add_angles(ang1, ang2):
     ang = ang1 + ang2
     if ang > 2.0*math.pi:
-        ang -= math.pi
+        ang -= 2.0*math.pi
     
     elif ang < -0.0:
         ang += 2.0*math.pi
