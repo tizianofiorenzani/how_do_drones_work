@@ -1,5 +1,5 @@
 # How Do Drones Work
-A collection of scripts from my totorials
+A collection of scripts from my tutorials
 
 * Follow my [youtube channel](https://www.youtube.com/watch?v=TFDWs_DG2QY&index=2&list=PLuteWQUGtU9BcXXr3jCG00uVXFwQJkLRa)
 * Find  me on [Linkedin](www.linkedin.com/in/tiziano-fiorenzani-0a856415)
