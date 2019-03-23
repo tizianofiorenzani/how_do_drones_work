@@ -31,7 +31,7 @@ def save_snaps(width=0, height=0, name="snapshot", folder=".", raspi=False):
 
     cap = cv2.VideoCapture(0)
     if width > 0 and height > 0:
-        print "Setting the custom Width and Height"
+        print("Setting the custom Width and Height")
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     try:
@@ -60,7 +60,7 @@ def save_snaps(width=0, height=0, name="snapshot", folder=".", raspi=False):
         if key == ord('q'):
             break
         if key == ord(' '):
-            print "Saving image ", nSnap
+            print("Saving image ", nSnap)
             cv2.imwrite("%s%d.jpg"%(fileName, nSnap), frame)
             nSnap += 1
 
@@ -95,7 +95,7 @@ def main():
 
     save_snaps(width=args.dwidth, height=args.dheight, name=args.name, folder=args.folder, raspi=args.raspi)
 
-    print "Files saved"
+    print("Files saved")
 
 if __name__ == "__main__":
     main()
