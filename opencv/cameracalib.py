@@ -40,8 +40,8 @@ objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 
 if len(sys.argv) < 6:
-        print "\n Not enough inputs are provided. Using the default values.\n\n" \
-              " type -h for help"
+        print("\n Not enough inputs are provided. Using the default values.\n\n" \
+              " type -h for help")
 else:
     workingFolder   = sys.argv[1]
     imageType       = sys.argv[2]
@@ -50,13 +50,13 @@ else:
     dimension       = float(sys.argv[5])
 
 if '-h' in sys.argv or '--h' in sys.argv:
-    print "\n IMAGE CALIBRATION GIVEN A SET OF IMAGES"
-    print " call: python cameracalib.py <folder> <image type> <num rows (9)> <num cols (6)> <cell dimension (25)>"
-    print "\n The script will look for every image in the provided folder and will show the pattern found." \
+    print("\n IMAGE CALIBRATION GIVEN A SET OF IMAGES")
+    print(" call: python cameracalib.py <folder> <image type> <num rows (9)> <num cols (6)> <cell dimension (25)>")
+    print("\n The script will look for every image in the provided folder and will show the pattern found." \
           " User can skip the image pressing ESC or accepting the image with RETURN. " \
           " At the end the end the following files are created:" \
           "  - cameraDistortion.txt" \
-          "  - cameraMatrix.txt \n\n"
+          "  - cameraMatrix.txt \n\n")
 
     sys.exit()
 
@@ -64,9 +64,9 @@ if '-h' in sys.argv or '--h' in sys.argv:
 filename    = workingFolder + "/*." + imageType
 images      = glob.glob(filename)
 
-print len(images)
+print(len(images))
 if len(images) < 9:
-    print "Not enough images were found: at least 9 shall be provided!!!"
+    print("Not enough images were found: at least 9 shall be provided!!!")
     sys.exit()
 
 
@@ -81,14 +81,14 @@ else:
         img     = cv2.imread(fname)
         gray    = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-        print "Reading image ", fname
+        print("Reading image ", fname)
 
         # Find the chess board corners
         ret, corners = cv2.findChessboardCorners(gray, (nCols,nRows),None)
 
         # If found, add object points, image points (after refining them)
         if ret == True:
-            print "Pattern found! Press ESC to skip or ENTER to accept"
+            print("Pattern found! Press ESC to skip or ENTER to accept")
             #--- Sometimes, Harris cornes fails with crappy pictures, so
             corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
 
@@ -98,11 +98,11 @@ else:
             # cv2.waitKey(0)
             k = cv2.waitKey(0) & 0xFF
             if k == 27: #-- ESC Button
-                print "Image Skipped"
+                print("Image Skipped")
                 imgNotGood = fname
                 continue
 
-            print "Image accepted"
+            print("Image accepted")
             nPatternFound += 1
             objpoints.append(objp)
             imgpoints.append(corners2)
@@ -115,13 +115,13 @@ else:
 cv2.destroyAllWindows()
 
 if (nPatternFound > 1):
-    print "Found %d good images" % (nPatternFound)
+    print("Found %d good images" % (nPatternFound))
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 
     # Undistort an image
     img = cv2.imread(imgNotGood)
     h,  w = img.shape[:2]
-    print "Image to undistort: ", imgNotGood
+    print("Image to undistort: ", imgNotGood)
     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
     # undistort
@@ -131,13 +131,13 @@ if (nPatternFound > 1):
     # crop the image
     x,y,w,h = roi
     dst = dst[y:y+h, x:x+w]
-    print "ROI: ", x, y, w, h
+    print("ROI: ", x, y, w, h)
 
     cv2.imwrite(workingFolder + "/calibresult.png",dst)
-    print "Calibrated picture saved as calibresult.png"
-    print "Calibration Matrix: "
-    print mtx
-    print "Disortion: ", dist
+    print("Calibrated picture saved as calibresult.png")
+    print("Calibration Matrix: ")
+    print(mtx)
+    print("Disortion: ", dist)
 
     #--------- Save result
     filename = workingFolder + "/cameraMatrix.txt"
@@ -151,10 +151,10 @@ if (nPatternFound > 1):
         error = cv2.norm(imgpoints[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
         mean_error += error
 
-    print "total error: ", mean_error/len(objpoints)
+    print("total error: ", mean_error/len(objpoints))
 
 else:
-    print "In order to calibrate you need at least 9 good pictures... try again"
+    print("In order to calibrate you need at least 9 good pictures... try again")
 
 
 
