@@ -117,7 +117,7 @@ while True:
     corners, ids, rejected = aruco.detectMarkers(image=gray, dictionary=aruco_dict, parameters=parameters,
                               cameraMatrix=camera_matrix, distCoeff=camera_distortion)
     
-    if ids != None and ids[0] == id_to_find:
+    if ids is not None and ids[0] == id_to_find:
         
         #-- ret = [rvec, tvec, ?]
         #-- array of rotation and position of each marker in camera frame
