@@ -115,7 +115,7 @@ cwd                 = path.dirname(path.abspath(__file__))
 calib_path          = cwd+"/../opencv/"
 camera_matrix       = np.loadtxt(calib_path+'cameraMatrix_raspi.txt', delimiter=',')
 camera_distortion   = np.loadtxt(calib_path+'cameraDistortion_raspi.txt', delimiter=',')                                      
-aruco_tracker       = ArucoSingleTracker(id_to_find=72, marker_size=marker_size, show_video=False, 
+aruco_tracker       = ArucoSingleTracker(id_to_find=id_to_find, marker_size=marker_size, show_video=False, 
                 camera_matrix=camera_matrix, camera_distortion=camera_distortion)
                 
                 
