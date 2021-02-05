@@ -3,9 +3,9 @@ import time
 import threading
 
 UDP_IP_OUT     = "192.168.5.1"
-UDP_IP_IN      = "127.0.0.1"
+UDP_IP_IN      = "0.0.0.0"
 UDP_PORT_WRITE = 4401
-UDP_PORT_READ  = 19005
+UDP_PORT_READ  = 19105
 
 sock_write = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
@@ -25,7 +25,7 @@ def read_data():
 print("--- PROXY STARTED from localhost %d to %s:%d"%(UDP_PORT_READ, UDP_IP_OUT, UDP_PORT_WRITE))  
 while True:
     #- Read data from UDP
-    data_received = read_data()
+    data_received = read_data().decode()
     #sock_write.sendto(data_received, (UDP_IP_OUT, UDP_PORT_WRITE))
     print("Command received: ", data_received)
 
