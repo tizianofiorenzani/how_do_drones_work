@@ -31,14 +31,6 @@ imageType       = 'jpg'
 # termination criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, dimension, 0.001)
 
-# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((nRows*nCols,3), np.float32)
-objp[:,:2] = np.mgrid[0:nCols,0:nRows].T.reshape(-1,2)
-
-# Arrays to store object points and image points from all the images.
-objpoints = [] # 3d point in real world space
-imgpoints = [] # 2d points in image plane.
-
 if len(sys.argv) < 6:
         print("\n Not enough inputs are provided. Using the default values.\n\n" \
               " type -h for help")
@@ -48,6 +40,14 @@ else:
     nRows           = int(sys.argv[3])
     nCols           = int(sys.argv[4])
     dimension       = float(sys.argv[5])
+    
+# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
+objp = np.zeros((nRows*nCols,3), np.float32)
+objp[:,:2] = np.mgrid[0:nCols,0:nRows].T.reshape(-1,2)
+
+# Arrays to store object points and image points from all the images.
+objpoints = [] # 3d point in real world space
+imgpoints = [] # 2d points in image plane.    
 
 if '-h' in sys.argv or '--h' in sys.argv:
     print("\n IMAGE CALIBRATION GIVEN A SET OF IMAGES")
@@ -146,7 +146,7 @@ if (nPatternFound > 1):
     np.savetxt(filename, dist, delimiter=',')
 
     mean_error = 0
-    for i in xrange(len(objpoints)):
+    for i in range(len(objpoints)):
         imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
         error = cv2.norm(imgpoints[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
         mean_error += error
@@ -155,8 +155,3 @@ if (nPatternFound > 1):
 
 else:
     print("In order to calibrate you need at least 9 good pictures... try again")
-
-
-
-
-
